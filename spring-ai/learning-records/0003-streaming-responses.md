@@ -1,0 +1,3 @@
+# Streaming Responses Understanding
+
+The user has learned how to implement streaming responses in Spring AI using Flux<String> and the .stream().content() method. This enables real-time, progressive loading of AI responses which significantly improves user experience for educational chatbots. The user understands the difference between synchronous and streaming responses, and how to configure controllers for streaming with proper media types.

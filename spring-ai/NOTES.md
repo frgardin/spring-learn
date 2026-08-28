@@ -18,3 +18,5 @@
 - Added conversation memory for context retention
 - Learned about MessageWindowChatMemory and conversation IDs
 - Fixed memory issue: MessageChatMemoryAdvisor must be added to ChatClient builder
+- Implemented streaming responses for better UX
+- Learned about Flux<String> and text/event-stream content type

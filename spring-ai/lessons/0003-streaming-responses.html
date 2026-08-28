@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 3: Streaming Responses for Better UX</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lesson 3: Streaming Responses for Better UX</h1>
+        
+        <div class="callout callout-info">
+            <strong>Mission Connection:</strong> Streaming responses will make your educational chatbot feel more responsive and natural, like a real conversation.
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+            <li>Why streaming is important for chat applications</li>
+            <li>How to implement streaming with Spring AI</li>
+            <li>Handling streaming responses in REST controllers</li>
+            <li>Comparing synchronous vs streaming responses</li>
+        </ul>
+
+        <h2>Why Streaming Matters</h2>
+        <p>Without streaming, users have to wait for the entire response before seeing anything. This feels slow and unnatural.</p>
+        
+        <div class="callout callout-success">
+            <strong>Streaming Benefits:</strong>
+            <ul>
+                <li><strong>Faster perceived response</strong> - Users see output immediately</li>
+                <li><strong>Better UX</strong> - Feels like real-time conversation</li>
+                <li><strong>Progressive loading</strong> - Long responses appear gradually</li>
+                <li><strong>Interruptible</strong> - Users can stop generation early</li>
+            </ul>
+        </div>
+
+        <h2>Step 1: Understanding Streaming in Spring AI</h2>
+        <p>Spring AI provides two ways to stream responses:</p>
+        <ul>
+            <li><strong>Flux&lt;String&gt;</strong> - Streams text chunks</li>
+            <li><strong>Flux&lt;ChatResponse&gt;</strong> - Streams full response objects</li>
+        </ul>
+        
+        <p>The <code>StreamingChatModel</code> interface provides the <code>stream()</code> method that returns a reactive Flux.</p>
+
+        <h2>Step 2: Update Your Chat Service</h2>
+        <p>Add streaming methods to your <code>ChatService.java</code>:</p>
+        
+<pre><code>package br.com.felipegardin.chat.service;
+
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class ChatService {
+
+    private final ChatClient simpleChatClient;
+    private final ChatClient chatClientWithMemory;
+
+    public String simpleChat(String input) {
+        return this.simpleChatClient.prompt()
+                .user(input)
+                .call()
+                .content();
+    }
+
+    public String chatWithMemory(String input, String conversationId) {
+        if (conversationId == null || conversationId.isBlank()) {
+            return simpleChat(input);
+        }
+        return chatClientWithMemory.prompt()
+                .user(input)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .call()
+                .content();
+    }
+
+    // Streaming methods
+    public Flux&lt;String&gt; simpleChatStream(String input) {
+        return this.simpleChatClient.prompt()
+                .user(input)
+                .stream()
+                .content();
+    }
+
+    public Flux&lt;String&gt; chatWithMemoryStream(String input, String conversationId) {
+        if (conversationId == null || conversationId.isBlank()) {
+            return simpleChatStream(input);
+        }
+        return chatClientWithMemory.prompt()
+                .user(input)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .stream()
+                .content();
+    }
+}</code></pre>
+
+        <h2>Step 3: Update Your Controller</h2>
+        <p>Add streaming endpoints to your <code>ChatController.java</code>:</p>
+        
+<pre><code>package br.com.felipegardin.chat.controller;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import reactor.core.publisher.Flux;
+
+import br.com.felipegardin.chat.service.ChatService;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/chat")
+@RequiredArgsConstructor
+public class ChatController {
+
+    private final ChatService chatService;
+
+    @GetMapping("simple")
+    public String simpleChat(@RequestParam String input) {
+        return chatService.simpleChat(input);
+    }
+
+    @GetMapping("with-memory")
+    public String chatWithMemory(@RequestParam String input, @RequestParam(required = false) String conversationId) {
+        return chatService.chatWithMemory(input, conversationId);   
+    }
+
+    // Streaming endpoints
+    @GetMapping(value = "simple/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @ResponseBody
+    public Flux&lt;String&gt; simpleChatStream(@RequestParam String input) {
+        return chatService.simpleChatStream(input);
+    }
+
+    @GetMapping(value = "with-memory/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @ResponseBody
+    public Flux&lt;String&gt; chatWithMemoryStream(
+            @RequestParam String input, 
+            @RequestParam(required = false) String conversationId) {
+        return chatService.chatWithMemoryStream(input, conversationId);
+    }
+}</code></pre>
+
+        <h2>Step 4: Test Streaming</h2>
+        <p>Test the streaming endpoints:</p>
+        
+        <ol>
+            <li><strong>Simple streaming:</strong>
+<pre><code>curl -N "http://localhost:8080/chat/simple/stream?input=Tell+me+a+joke"</code></pre>
+            </li>
+            
+            <li><strong>Streaming with memory:</strong>
+<pre><code>curl -N "http://localhost:8080/chat/with-memory/stream?input=My+name+is+Alex&conversationId=student1"</code></pre>
+            </li>
+            
+            <li><strong>Follow-up (same conversation):</strong>
+<pre><code>curl -N "http://localhost:8080/chat/with-memory/stream?input=What+is+my+name?&conversationId=student1"</code></pre>
+            </li>
+        </ol>
+        
+        <div class="callout callout-warning">
+            <strong>Note:</strong> The <code>-N</code> flag in curl disables buffering, so you can see the streaming output in real-time.
+        </div>
+
+        <h2>Understanding the Code</h2>
+        
+        <div class="callout callout-success">
+            <strong>Key Concepts:</strong>
+            <ul>
+                <li><strong>.stream().content()</strong> - Returns Flux&lt;String&gt; instead of String</li>
+                <li><strong>MediaType.TEXT_EVENT_STREAM_VALUE</strong> - Sets correct content type for streaming</li>
+                <li><strong>Flux&lt;String&gt;</strong> - Reactive type that emits multiple strings over time</li>
+                <li><strong>@ResponseBody</strong> - Required for returning reactive types</li>
+            </ul>
+        </div>
+
+        <h2>Synchronous vs Streaming Comparison</h2>
+        
+        <table border="1" cellpadding="10" cellspacing="0">
+            <tr>
+                <th>Feature</th>
+                <th>Synchronous</th>
+                <th>Streaming</th>
+            </tr>
+            <tr>
+                <td>Response Type</td>
+                <td>String</td>
+                <td>Flux&lt;String&gt;</td>
+            </tr>
+            <tr>
+                <td>Wait Time</td>
+                <td>Until complete</td>
+                <td>Immediate first chunk</td>
+            </tr>
+            <tr>
+                <td>Memory Usage</td>
+                <td>Stores full response</td>
+                <td>Processes chunks</td>
+            </tr>
+            <tr>
+                <td>User Experience</td>
+                <td>Delayed</td>
+                <td>Real-time</td>
+            </tr>
+            <tr>
+                <td>Use Case</td>
+                <td>Short responses</td>
+                <td>Long responses, chat</td>
+            </tr>
+        </table>
+
+        <h2>Quiz: Test Your Understanding</h2>
+        <div class="quiz">
+            <div class="quiz-question">What does the .stream().content() method return?</div>
+            <ul class="quiz-options">
+                <li><input type="radio" name="q1" id="q1a"> String</li>
+                <li><input type="radio" name="q1" id="q1b"> Flux&lt;String&gt;</li>
+                <li><input type="radio" name="q1" id="q1c"> Mono&lt;String&gt;</li>
+            </ul>
+            
+            <div class="quiz-question">What content type should be used for streaming responses?</div>
+            <ul class="quiz-options">
+                <li><input type="radio" name="q2" id="q2a"> application/json</li>
+                <li><input type="radio" name="q2" id="q2b"> text/plain</li>
+                <li><input type="radio" name="q2" id="q2c"> text/event-stream</li>
+            </ul>
+        </div>
+
+        <div class="next-steps">
+            <h3>Next Steps</h3>
+            <p>In the next lesson, we'll enhance your chatbot with:</p>
+            <ul>
+                <li>Educational content awareness (RAG)</li>
+                <li>Structured output for learning progress</li>
+                <li>Tool calling for external resources</li>
+            </ul>
+            <p><strong>Practice:</strong> Try implementing a simple chat UI using HTML and JavaScript to connect to your streaming endpoints.</p>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>Questions?</strong> Ask your teacher about streaming, reactive programming, or how to build a chat UI for your educational chatbot.
+        </div>
+
+        <p><a href="0002-conversation-memory.html">Previous Lesson: Conversation Memory</a> | <a href="../RESOURCES.md">Resources</a> | <a href="0004-educational-content.html">Next Lesson: Educational Content Awareness</a></p>
+    </div>
+</body>
+</html>
