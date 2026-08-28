@@ -20,8 +20,13 @@ public class ChatController {
 
     private final ChatService chatService;
 
-    @GetMapping
-    public HttpEntity<String> answerQuestion(@RequestParam String input) {
-        return ResponseEntity.ok(chatService.answerQuestion(input));
+    @GetMapping("simple")
+    public HttpEntity<String> simpleChat(@RequestParam String input) {
+        return ResponseEntity.ok(chatService.simpleChat(input));
+    }
+
+    @GetMapping("with-memory")
+    public HttpEntity<String> chatWithMemory(@RequestParam String input, @RequestParam(required = false) String conversationId) {
+        return ResponseEntity.ok(chatService.chatWithMemory(input, conversationId));   
     }
 }
