@@ -14,4 +14,7 @@
 ## Session Notes
 - Started with basic Spring AI setup
 - Created educational chatbot project structure
-- Focused on OpenAI integration first
+- Focused on Verboo AI integration (custom base URL)
+- Added conversation memory for context retention
+- Learned about MessageWindowChatMemory and conversation IDs
+- Fixed memory issue: MessageChatMemoryAdvisor must be added to ChatClient builder

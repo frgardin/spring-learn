@@ -102,7 +102,44 @@ curl "http://localhost:8080/api/chat/simple?message=Explain+quantum+computing"
 
 ## Learning Progression
 1. ✅ Basic chat endpoint
-2. ➡️ Conversation memory
+2. ✅ Conversation memory
 3. ➡️ Streaming responses
 4. ➡️ Educational content awareness
 5. ➡️ Advanced prompt engineering
+
+## Chat Memory
+
+### Basic Memory Setup
+```java
+ChatMemory chatMemory = MessageWindowChatMemory.builder()
+    .maxMessages(10)  // Keep last 10 messages
+    .build();
+```
+
+### Using Memory with ChatClient
+```java
+ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
+
+ChatClient chatClient = ChatClient.builder(chatModel)
+    .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+    .build();
+
+// With specific conversation ID
+String response = chatClient.prompt()
+    .user("My name is Alex")
+    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, "user123"))
+    .call()
+    .content();
+```
+
+### Memory Configuration Properties
+```properties
+# Memory settings (if using custom configuration)
+spring.ai.chat.memory.max-messages=20
+spring.ai.chat.memory.conversation-id=user123
+```
+
+### Key Concepts
+- **Conversation ID**: Identifies different conversations (use unique IDs per user/session)
+- **Message Window**: Sliding window of messages kept in memory
+- **Advisors**: Manage memory automatically for each request

@@ -1,0 +1,3 @@
+# Conversation Memory Understanding
+
+The user has learned how to add conversation memory to their Spring AI chatbot using MessageWindowChatMemory, MessageChatMemoryAdvisor, and conversation IDs. This enables the chatbot to remember previous interactions within the same conversation, which is essential for building an effective educational tutor that can build on previous explanations and track learning progress. The key insight is that MessageChatMemoryAdvisor must be added to the ChatClient builder to actually use the memory.

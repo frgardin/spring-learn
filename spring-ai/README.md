@@ -7,6 +7,7 @@ Welcome to your Spring AI learning journey! This workspace is designed to help y
 1. **Read the Mission**: Start with [MISSION.md](MISSION.md) to understand your learning goals
 2. **Check Resources**: Review [RESOURCES.md](RESOURCES.md) for trusted learning materials
 3. **Start Learning**: Begin with [Lesson 1: Setting Up Your First Spring AI Chatbot](lessons/0001-setup-first-chatbot.html)
+4. **Continue Learning**: [Lesson 2: Adding Conversation Memory](lessons/0002-conversation-memory.html)
 
 ## Workspace Structure
 
@@ -18,9 +19,11 @@ spring-ai/
 ├── reference/                    # Quick reference materials
 │   └── spring-ai-basics.md      # Spring AI cheat sheet
 ├── lessons/                      # Interactive learning lessons
-│   └── 0001-setup-first-chatbot.html
+│   ├── 0001-setup-first-chatbot.html
+│   └── 0002-conversation-memory.html
 ├── learning-records/             # Your learning progress
-│   └── 0001-initial-setup.md
+│   ├── 0001-initial-setup.md
+│   └── 0002-conversation-memory.md
 └── assets/                       # Shared components
     └── styles.css               # Lesson styling
 ```

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 2: Adding Conversation Memory to Your Chatbot</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lesson 2: Adding Conversation Memory to Your Chatbot</h1>
+        
+        <div class="callout callout-info">
+            <strong>Mission Connection:</strong> Adding conversation memory will make your educational chatbot more effective by allowing it to remember previous interactions and provide contextual responses.
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+            <li>Why conversation memory is important for educational chatbots</li>
+            <li>How Spring AI implements chat memory</li>
+            <li>Configuring memory with MessageWindowChatMemory</li>
+            <li>Using conversation IDs to manage different conversations</li>
+            <li>Testing memory in your chatbot</li>
+        </ul>
+
+        <h2>Why Conversation Memory Matters</h2>
+        <p>Without memory, each interaction with an AI model is independent. For an educational chatbot, this means:</p>
+        <ul>
+            <li>The bot can't remember what topics you've covered</li>
+            <li>It can't build on previous explanations</li>
+            <li>Each conversation starts from scratch</li>
+        </ul>
+        
+        <div class="callout callout-success">
+            <strong>Educational Benefit:</strong> With memory, your chatbot can:
+            <ul>
+                <li>Remember what concepts you've already learned</li>
+                <li>Avoid repeating explanations</li>
+                <li>Build on previous knowledge</li>
+                <li>Provide personalized learning paths</li>
+            </ul>
+        </div>
+
+        <h2>Step 1: Understanding Spring AI Memory</h2>
+        <p>Spring AI provides two key abstractions:</p>
+        <ul>
+            <li><strong>ChatMemory</strong> - Manages which messages to keep and when to remove them</li>
+            <li><strong>ChatMemoryRepository</strong> - Stores and retrieves messages</li>
+        </ul>
+        
+        <p>The default implementation uses:</p>
+        <ul>
+            <li><code>InMemoryChatMemoryRepository</code> - Stores messages in memory</li>
+            <li><code>MessageWindowChatMemory</code> - Keeps a sliding window of messages</li>
+        </ul>
+
+        <h2>Step 2: Update Your Chat Controller</h2>
+        <p>Let's modify the chat controller from Lesson 1 to include memory. Update <code>ChatController.java</code>:</p>
+        
+<pre><code>package com.example.chatbot;
+
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/chat")
+public class ChatController {
+    
+    private final ChatClient chatClient;
+    private final ChatMemory chatMemory;
+    
+    public ChatController(ChatClient.Builder builder) {
+        this.chatMemory = MessageWindowChatMemory.builder()
+            .maxMessages(10)  // Keep last 10 messages
+            .build();
+        
+        this.chatClient = builder
+            .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+            .build();
+    }
+    
+    @GetMapping("/simple")
+    public String simpleChat(@RequestParam String message) {
+        return chatClient.prompt(message).call().content();
+    }
+    
+    @GetMapping("/with-memory")
+    public String chatWithMemory(
+            @RequestParam String message,
+            @RequestParam(defaultValue = "user123") String conversationId) {
+        
+        return chatClient.prompt()
+            .user(message)
+            .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+            .call()
+            .content();
+    }
+}</code></pre>
+
+        <h2>Step 3: Test Memory Functionality</h2>
+        <p>Run your application and test these scenarios:</p>
+        
+        <ol>
+            <li><strong>First request:</strong>
+<pre><code>curl "http://localhost:8080/api/chat/with-memory?message=My+name+is+Alex&conversationId=student1"</code></pre>
+            </li>
+            
+            <li><strong>Second request (same conversation):</strong>
+<pre><code>curl "http://localhost:8080/api/chat/with-memory?message=What+is+my+name?&conversationId=student1"</code></pre>
+            </li>
+            
+            <li><strong>Third request (different conversation):</strong>
+<pre><code>curl "http://localhost:8080/api/chat/with-memory?message=What+is+my+name?&conversationId=student2"</code></pre>
+            </li>
+        </ol>
+        
+        <div class="callout callout-warning">
+            <strong>Expected Results:</strong>
+            <ul>
+                <li>Request 2 should remember "Alex" from the same conversation</li>
+                <li>Request 3 should not know the name (different conversation ID)</li>
+            </ul>
+        </div>
+
+        <h2>Understanding the Code</h2>
+        
+        <div class="callout callout-success">
+            <strong>Key Concepts:</strong>
+            <ul>
+                <li><strong>MessageWindowChatMemory.builder().maxMessages(10)</strong> - Keeps last 10 messages</li>
+                <li><strong>MessageChatMemoryAdvisor</strong> - Advisor that manages conversation memory</li>
+                <li><strong>ChatMemory.CONVERSATION_ID</strong> - Parameter to identify different conversations</li>
+                <li><strong>advisors(a -> a.param(...))</strong> - Sets the conversation ID for each request</li>
+                <li><strong>defaultAdvisors</strong> - Sets default advisors for all requests</li>
+            </ul>
+        </div>
+
+        <h2>Memory Configuration Options</h2>
+        
+        <table border="1" cellpadding="10" cellspacing="0">
+            <tr>
+                <th>Option</th>
+                <th>Description</th>
+                <th>Default</th>
+            </tr>
+            <tr>
+                <td><code>maxMessages</code></td>
+                <td>Maximum messages to keep in memory</td>
+                <td>20</td>
+            </tr>
+            <tr>
+                <td><code>chatMemoryRepository</code></td>
+                <td>Storage implementation</td>
+                <td>InMemoryChatMemoryRepository</td>
+            </tr>
+        </table>
+
+        <h2>Quiz: Test Your Understanding</h2>
+        <div class="quiz">
+            <div class="quiz-question">What happens when the number of messages exceeds maxMessages?</div>
+            <ul class="quiz-options">
+                <li><input type="radio" name="q1" id="q1a"> Older messages are deleted</li>
+                <li><input type="radio" name="q1" id="q1b"> The system crashes</li>
+                <li><input type="radio" name="q1" id="q1c"> New messages are rejected</li>
+            </ul>
+            
+            <div class="quiz-question">What is the purpose of conversation IDs?</div>
+            <ul class="quiz-options">
+                <li><input type="radio" name="q2" id="q2a"> To identify different users</li>
+                <li><input type="radio" name="q2" id="q2b"> To track API usage</li>
+                <li><input type="radio" name="q2" id="q2c"> To manage different conversations</li>
+            </ul>
+        </div>
+
+        <div class="next-steps">
+            <h3>Next Steps</h3>
+            <p>In the next lesson, we'll enhance your chatbot with:</p>
+            <ul>
+                <li>Streaming responses for better user experience</li>
+                <li>Handling longer conversations with persistent storage</li>
+                <li>Adding educational content awareness</li>
+            </ul>
+            <p><strong>Practice:</strong> Try increasing <code>maxMessages</code> to 20 and test with more messages to see how memory management works.</p>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>Questions?</strong> Ask your teacher about conversation memory, message windowing, or how to implement persistent storage for educational chatbots.
+        </div>
+
+        <p><a href="0001-setup-first-chatbot.html">Previous Lesson: Setting Up Your First Spring AI Chatbot</a> | <a href="../RESOURCES.md">Resources</a> | <a href="0003-streaming-responses.html">Next Lesson: Streaming Responses</a></p>
+    </div>
+</body>
+</html>
