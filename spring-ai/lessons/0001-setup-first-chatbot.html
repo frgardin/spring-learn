@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 1: Setting Up Your First Spring AI Chatbot</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lesson 1: Setting Up Your First Spring AI Chatbot</h1>
+        
+        <div class="callout callout-info">
+            <strong>Mission Connection:</strong> This lesson starts your journey to build an educational tutor chatbot using Spring AI.
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+            <li>How to create a Spring Boot application with Spring AI dependencies</li>
+            <li>Basic configuration for OpenAI integration</li>
+            <li>Creating a simple chat endpoint</li>
+            <li>Testing your first AI conversation</li>
+        </ul>
+
+        <h2>Prerequisites</h2>
+        <ul>
+            <li>Java 17 or later</li>
+            <li>Maven or Gradle</li>
+            <li>OpenAI API key (get from <a href="https://platform.openai.com/signup">platform.openai.com</a>)</li>
+        </ul>
+
+        <h2>Step 1: Create Spring Boot Project</h2>
+        <p>Use <a href="https://start.spring.io/#!type=maven-project&language=java&platformVersion=3.3.4&packaging=jar&jvmVersion=17&groupId=com.example&artifactId=spring-ai-chatbot&name=spring-ai-chatbot&description=Spring%20AI%20Educational%20Chatbot&packageName=com.example.chatbot&dependencies=web,spring-ai-openai">Spring Initializr</a> with these dependencies:</p>
+        <ul>
+            <li><strong>Spring Web</strong> - For REST endpoints</li>
+            <li><strong>Spring AI OpenAI</strong> - For AI integration</li>
+        </ul>
+
+        <h2>Step 2: Configure Application Properties</h2>
+        <p>Add your OpenAI API key to <code>src/main/resources/application.properties</code>:</p>
+        
+<pre><code># OpenAI Configuration
+spring.ai.openai.api-key=${OPENAI_API_KEY}
+spring.ai.openai.chat.options.model=gpt-3.5-turbo
+
+# Server Configuration
+server.port=8080</code></pre>
+
+        <div class="callout callout-warning">
+            <strong>Security Note:</strong> Never commit API keys to version control. Use environment variables or Spring Cloud Config for production.
+        </div>
+
+        <h2>Step 3: Create Chat Controller</h2>
+        <p>Create a REST controller in <code>src/main/java/com/example/chatbot/ChatController.java</code>:</p>
+        
+<pre><code>package com.example.chatbot;
+
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/chat")
+public class ChatController {
+    
+    private final ChatClient chatClient;
+    
+    public ChatController(ChatClient.Builder builder) {
+        this.chatClient = builder.build();
+    }
+    
+    @GetMapping("/simple")
+    public String simpleChat(@RequestParam String message) {
+        return chatClient.prompt(message).call().content();
+    }
+}</code></pre>
+
+        <h2>Step 4: Test Your Chatbot</h2>
+        <ol>
+            <li>Run the application: <code>./mvnw spring-boot:run</code></li>
+            <li>Test with curl or browser:
+<pre><code>curl "http://localhost:8080/api/chat/simple?message=Hello%20Spring%20AI"</code></pre>
+            </li>
+            <li>You should get a response from the AI model</li>
+        </ol>
+
+        <h2>Understanding the Code</h2>
+        <p>Let's break down what's happening:</p>
+        
+        <div class="callout callout-success">
+            <strong>Key Concepts:</strong>
+            <ul>
+                <li><strong>ChatClient.Builder</strong> - Spring AI's fluent API for building chat clients</li>
+                <li><strong>prompt(message)</strong> - Creates a prompt with your message</li>
+                <li><strong>call()</strong> - Executes the prompt synchronously</li>
+                <li><strong>content()</strong> - Extracts the text response</li>
+            </ul>
+        </div>
+
+        <h2>Quiz: Test Your Understanding</h2>
+        <div class="quiz">
+            <div class="quiz-question">What annotation is used to mark a class as a REST controller in Spring?</div>
+            <ul class="quiz-options">
+                <li><input type="radio" name="q1" id="q1a"> @RestController</li>
+                <li><input type="radio" name="q1" id="q1b"> @Controller</li>
+                <li><input type="radio" name="q1" id="q1c"> @Service</li>
+            </ul>
+            
+            <div class="quiz-question">What method executes a prompt synchronously in Spring AI?</div>
+            <ul class="quiz-options">
+                <li><input type="radio" name="q2" id="q2a"> execute()</li>
+                <li><input type="radio" name="q2" id="q2b"> run()</li>
+                <li><input type="radio" name="q2" id="q2c"> call()</li>
+            </ul>
+        </div>
+
+        <div class="next-steps">
+            <h3>Next Steps</h3>
+            <p>In the next lesson, we'll enhance your chatbot with:</p>
+            <ul>
+                <li>Conversation memory for context</li>
+                <li>Streaming responses for better UX</li>
+                <li>Adding educational content awareness</li>
+            </ul>
+            <p><strong>Practice:</strong> Try modifying the model parameter in <code>application.properties</code> to use different OpenAI models like <code>gpt-4</code>.</p>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>Questions?</strong> Ask your teacher (the AI assistant) about any concepts that are unclear. You can also check the <a href="../RESOURCES.md">Resources</a> for additional learning materials.
+        </div>
+
+        <p><a href="../RESOURCES.md">Back to Resources</a> | <a href="0002-conversation-memory.html">Next Lesson: Adding Conversation Memory</a></p>
+    </div>
+</body>
+</html>
