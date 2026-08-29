@@ -20,3 +20,5 @@
 - Fixed memory issue: MessageChatMemoryAdvisor must be added to ChatClient builder
 - Implemented streaming responses for better UX
 - Learned about Flux<String> and text/event-stream content type
+- Added tool calling for educational tools (@Tool annotation)
+- Learned about tool calling loop and ToolCallingAdvisor
