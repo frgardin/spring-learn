@@ -103,9 +103,42 @@ curl "http://localhost:8080/api/chat/simple?message=Explain+quantum+computing"
 ## Learning Progression
 1. ✅ Basic chat endpoint
 2. ✅ Conversation memory
-3. ➡️ Streaming responses
+3. ✅ Streaming responses
 4. ➡️ Educational content awareness
 5. ➡️ Advanced prompt engineering
+
+## Streaming Responses
+
+### Basic Streaming
+```java
+Flux<String> stream = chatClient.prompt("Tell me a joke")
+    .stream()
+    .content();
+```
+
+### Streaming with Memory
+```java
+Flux<String> stream = chatClient.prompt()
+    .user("My name is Alex")
+    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, "user123"))
+    .stream()
+    .content();
+```
+
+### Controller Setup
+```java
+@GetMapping(value = "stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+@ResponseBody
+public Flux<String> streamChat(@RequestParam String input) {
+    return chatService.simpleChatStream(input);
+}
+```
+
+### Key Points
+- Use `.stream().content()` instead of `.call().content()`
+- Set `MediaType.TEXT_EVENT_STREAM_VALUE` for streaming
+- Return `Flux<String>` from controller methods
+- Use `@ResponseBody` for reactive types
 
 ## Chat Memory
 
