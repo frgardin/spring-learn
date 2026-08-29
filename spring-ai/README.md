@@ -9,6 +9,7 @@ Welcome to your Spring AI learning journey! This workspace is designed to help y
 3. **Start Learning**: Begin with [Lesson 1: Setting Up Your First Spring AI Chatbot](lessons/0001-setup-first-chatbot.html)
 4. **Continue Learning**: [Lesson 2: Adding Conversation Memory](lessons/0002-conversation-memory.html)
 5. **Continue Learning**: [Lesson 3: Streaming Responses](lessons/0003-streaming-responses.html)
+6. **Continue Learning**: [Lesson 4: Tool Calling](lessons/0004-tool-calling.html)
 
 ## Workspace Structure
 
@@ -22,11 +23,13 @@ spring-ai/
 ├── lessons/                      # Interactive learning lessons
 │   ├── 0001-setup-first-chatbot.html
 │   ├── 0002-conversation-memory.html
-│   └── 0003-streaming-responses.html
+│   ├── 0003-streaming-responses.html
+│   └── 0004-tool-calling.html
 ├── learning-records/             # Your learning progress
 │   ├── 0001-initial-setup.md
 │   ├── 0002-conversation-memory.md
-│   └── 0003-streaming-responses.md
+│   ├── 0003-streaming-responses.md
+│   └── 0004-tool-calling.md
 └── assets/                       # Shared components
     └── styles.css               # Lesson styling
 ```
@@ -40,11 +43,11 @@ spring-ai/
 
 ## Next Steps
 
-After completing Lesson 1, you'll learn:
-- Adding conversation memory for context
-- Streaming responses for better UX
-- Educational content awareness
+After completing Lesson 4, you'll learn:
 - Advanced prompt engineering
+- Custom educational tools
+- Tool calling with conversation memory
+- Error handling and best practices
 
 ## Getting Help
 

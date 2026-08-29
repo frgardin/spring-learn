@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 4: Adding Tool Calling to Your Educational Chatbot</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lesson 4: Adding Tool Calling to Your Educational Chatbot</h1>
+        
+        <div class="callout callout-info">
+            <strong>Mission Connection:</strong> Tool calling enables your educational chatbot to access external tools like calculators, dictionaries, or educational APIs, making it more interactive and accurate.
+        </div>
+
+        <h2>What You'll Learn</h2>
+        <ul>
+            <li>Why tool calling is important for educational chatbots</li>
+            <li>How to define tools using @Tool annotation</li>
+            <li>Passing tools to ChatClient</li>
+            <li>Understanding the tool calling loop</li>
+            <li>Testing tools in your chatbot</li>
+        </ul>
+
+        <h2>Why Tool Calling Matters</h2>
+        <p>Without tools, your chatbot can only generate text based on its training data. For an educational chatbot, this means:</p>
+        <ul>
+            <li>It can't perform calculations (math problems)</li>
+            <li>It can't look up current information (weather, news)</li>
+            <li>It can't access external educational resources</li>
+            <li>It can't execute actions (send emails, update records)</li>
+        </ul>
+        
+        <div class="callout callout-success">
+            <strong>Educational Benefits:</strong>
+            <ul>
+                <li><strong>Interactive learning</strong> - Students can ask for calculations, definitions, or examples</li>
+                <li><strong>Real-time information</strong> - Access to current data for up-to-date explanations</li>
+                <li><strong>Practical applications</strong> - Demonstrate concepts with real tools</li>
+                <li><strong>Enhanced engagement</strong> - More dynamic and responsive conversations</li>
+            </ul>
+        </div>
+
+        <h2>Step 1: Understanding Tool Calling in Spring AI</h2>
+        <p>Spring AI provides a powerful tool calling system that allows AI models to request execution of client-side tools. The flow is:</p>
+        <ol>
+            <li>You define tools (methods annotated with @Tool)</li>
+            <li>Pass tools to ChatClient</li>
+            <li>AI model decides when to call tools based on user queries</li>
+            <li>Spring AI executes the tools and returns results to the model</li>
+            <li>Model continues the conversation with tool results</li>
+        </ol>
+        
+        <div class="callout callout-warning">
+            <strong>Security Note:</strong> Tools are executed on your server, not by the AI model. The model only sends tool call requests; your application controls execution.
+        </div>
+
+        <h2>Step 2: Create Educational Tools</h2>
+        <p>Create a new class <code>EducationalTools.java</code> in your project:</p>
+        
+<pre><code>package com.example.chatbot.tools;
+
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
+
+import java.util.Map;
+
+public class EducationalTools {
+
+    @Tool(description = "Calculate mathematical expressions")
+    public String calculate(@ToolParam(description = "Mathematical expression to evaluate") String expression) {
+        try {
+            // Simple expression evaluator (in production, use a proper library)
+            double result = evaluateExpression(expression);
+            return String.format("Result of %s = %.2f", expression, result);
+        } catch (Exception e) {
+            return "Error: Could not evaluate expression '" + expression + "'";
+        }
+    }
+
+    @Tool(description = "Get definition of a word")
+    public String getDefinition(@ToolParam(description = "Word to define") String word) {
+        // Mock dictionary - in real app, call a dictionary API
+        Map&lt;String, String&gt; dictionary = Map.of(
+            "algorithm", "A step-by-step procedure for solving a problem",
+            "variable", "A symbol representing a value that can change",
+            "function", "A block of code that performs a specific task"
+        );
+        
+        String definition = dictionary.getOrDefault(word.toLowerCase(), 
+            "Definition not found. Try asking for: algorithm, variable, or function");
+        
+        return String.format("%s: %s", word, definition);
+    }
+
+    @Tool(description = "Get educational fact about a topic")
+    public String getEducationalFact(@ToolParam(description = "Topic to get fact about") String topic) {
+        // Mock educational facts - in real app, call an educational API
+        Map&lt;String, String&gt; facts = Map.of(
+            "math", "Mathematics is the study of numbers, shapes, and patterns",
+            "science", "Science is the systematic study of the natural world",
+            "programming", "Programming is the process of creating instructions for computers"
+        );
+        
+        String fact = facts.getOrDefault(topic.toLowerCase(), 
+            "Interesting fact: Learning is a lifelong journey!");
+        
+        return String.format("About %s: %s", topic, fact);
+    }
+
+    private double evaluateExpression(String expression) {
+        // Simple evaluation - in production use exp4j or similar library
+        // This is a mock implementation
+        try {
+            return Double.parseDouble(expression.replaceAll("[^0-9.+-*/()]", ""));
+        } catch (NumberFormatException e) {
+            // For demo purposes, return a random result
+            return Math.random() * 100;
+        }
+    }
+}</code></pre>
+
+        <h2>Step 3: Update Your Chat Service</h2>
+        <p>Modify your <code>ChatService.java</code> to include tools:</p>
+        
+<pre><code>package com.example.chatbot.service;
+
+import com.example.chatbot.tools.EducationalTools;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ChatService {
+    
+    private final ChatClient chatClient;
+    private final EducationalTools educationalTools;
+    
+    public ChatService(ChatClient.Builder builder) {
+        this.chatClient = builder.build();
+        this.educationalTools = new EducationalTools();
+    }
+    
+    public String simpleChat(String message) {
+        return chatClient.prompt(message).call().content();
+    }
+    
+    public String chatWithTools(String message) {
+        return chatClient.prompt(message)
+            .tools(educationalTools)
+            .call()
+            .content();
+    }
+}</code></pre>
+
+        <h2>Step 4: Update Your Controller</h2>
+        <p>Add a new endpoint for tool-enabled chat in <code>ChatController.java</code>:</p>
+        
+<pre><code>@GetMapping("/with-tools")
+public String chatWithTools(@RequestParam String message) {
+    return chatService.chatWithTools(message);
+}</code></pre>
+
+        <h2>Step 5: Test Tool Calling</h2>
+        <p>Run your application and test these scenarios:</p>
+        
+        <ol>
+            <li><strong>Math calculation:</strong>
+<pre><code>curl "http://localhost:8080/api/chat/with-tools?message=What+is+123+*+456?"</code></pre>
+            </li>
+            
+            <li><strong>Word definition:</strong>
+<pre><code>curl "http://localhost:8080/api/chat/with-tools?message=Define+algorithm"</code></pre>
+            </li>
+            
+            <li><strong>Educational fact:</strong>
+<pre><code>curl "http://localhost:8080/api/chat/with-tools?message=Tell+me+about+math"</code></pre>
+            </li>
+        </ol>
+        
+        <div class="callout callout-success">
+            <strong>Expected Results:</strong>
+            <ul>
+                <li>The AI should recognize when to call tools based on your questions</li>
+                <li>It should use the calculator for math expressions</li>
+                <li>It should use the dictionary for word definitions</li>
+                <li>It should use the fact tool for educational topics</li>
+            </ul>
+        </div>
+
+        <h2>Understanding the Code</h2>
+        
+        <div class="callout callout-success">
+            <strong>Key Concepts:</strong>
+            <ul>
+                <li><strong>@Tool annotation</strong> - Marks a method as a tool the AI can call</li>
+                <li><strong>@ToolParam annotation</strong> - Describes tool parameters for the AI</li>
+                <li><strong>description parameter</strong> - Tells the AI when to use the tool</li>
+                <li><strong>.tools()</strong> - Passes tools to ChatClient for a specific request</li>
+                <li><strong>ToolCallingAdvisor</strong> - Auto-registered advisor that handles the tool loop</li>
+            </ul>
+        </div>
+
+        <h2>Tool Calling Flow</h2>
+        <p>When you ask "What is 123 * 456?", here's what happens:</p>
+        <ol>
+            <li>Your request goes to the AI model with tool definitions</li>
+            <li>AI recognizes this is a math problem and needs the calculator tool</li>
+            <li>AI sends a tool call request: <code>calculate("123 * 456")</code></li>
+            <li>Spring AI executes the tool on your server</li>
+            <li>Tool result is sent back to the AI model</li>
+            <li>AI uses the result to generate a response like "123 * 456 = 56,088"</li>
+        </ol>
+
+        <h2>Best Practices for Educational Tools</h2>
+        
+        <table border="1" cellpadding="10" cellspacing="0">
+            <tr>
+                <th>Practice</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td><strong>Clear descriptions</strong></td>
+                <td>Write tool descriptions that help the AI know when to use them</td>
+            </tr>
+            <tr>
+                <td><strong>Error handling</strong></td>
+                <td>Always handle exceptions gracefully in tools</td>
+            </tr>
+            <tr>
+                <td><strong>Input validation</strong></td>
+                <td>Validate tool parameters to prevent security issues</td>
+            </tr>
+            <tr>
+                <td><strong>Return meaningful results</strong></td>
+                <td>Format tool results so the AI can use them effectively</td>
+            </tr>
+        </table>
+
+        <h2>Quiz: Test Your Understanding</h2>
+        <div class="quiz">
+            <div class="quiz-question">What annotation marks a method as a tool in Spring AI?</div>
+            <ul class="quiz-options">
+                <li><input type="radio" name="q1" id="q1a"> @Function</li>
+                <li><input type="radio" name="q1" id="q1b"> @Tool</li>
+                <li><input type="radio" name="q1" id="q1c"> @Service</li>
+            </ul>
+            
+            <div class="quiz-question">What happens when an AI model needs to use a tool?</div>
+            <ul class="quiz-options">
+                <li><input type="radio" name="q2" id="q2a"> The model executes the tool directly</li>
+                <li><input type="radio" name="q2" id="q2b"> The model sends a tool call request to your application</li>
+                <li><input type="radio" name="q2" id="q2c"> The tool is executed automatically without model input</li>
+            </ul>
+        </div>
+
+        <div class="next-steps">
+            <h3>Next Steps</h3>
+            <p>In the next lesson, we'll enhance your chatbot with:</p>
+            <ul>
+                <li>Advanced tool patterns and error handling</li>
+                <li>Tool calling with conversation memory</li>
+                <li>Creating custom educational tools</li>
+            </ul>
+            <p><strong>Practice:</strong> Try adding a new tool that converts units (e.g., meters to feet) or provides definitions for more educational terms.</p>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>Questions?</strong> Ask your teacher about tool calling, @Tool annotation, or how to create custom educational tools for your chatbot.
+        </div>
+
+        <p><a href="0003-streaming-responses.html">Previous Lesson: Streaming Responses</a> | <a href="../RESOURCES.md">Resources</a> | <a href="../reference/spring-ai-basics.md">Reference</a></p>
+    </div>
+</body>
+</html>

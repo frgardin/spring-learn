@@ -1,0 +1,3 @@
+# Tool Calling for Educational Chatbots
+
+The user has learned how to implement tool calling in Spring AI using the @Tool annotation and ChatClient.tools() method. This enables the chatbot to access external tools like calculators, dictionaries, and educational APIs, making it more interactive and accurate for educational purposes. The user understands the tool calling loop and how the AI model decides when to call tools based on user queries.

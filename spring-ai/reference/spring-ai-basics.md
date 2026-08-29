@@ -104,7 +104,7 @@ curl "http://localhost:8080/api/chat/simple?message=Explain+quantum+computing"
 1. ✅ Basic chat endpoint
 2. ✅ Conversation memory
 3. ✅ Streaming responses
-4. ➡️ Educational content awareness
+4. ✅ Tool calling for educational tools
 5. ➡️ Advanced prompt engineering
 
 ## Streaming Responses
@@ -176,3 +176,40 @@ spring.ai.chat.memory.conversation-id=user123
 - **Conversation ID**: Identifies different conversations (use unique IDs per user/session)
 - **Message Window**: Sliding window of messages kept in memory
 - **Advisors**: Manage memory automatically for each request
+
+## Tool Calling
+
+### Basic Tool Definition
+```java
+public class EducationalTools {
+    
+    @Tool(description = "Calculate mathematical expressions")
+    public String calculate(@ToolParam(description = "Mathematical expression") String expression) {
+        // Implementation
+        return "Result: " + expression;
+    }
+}
+```
+
+### Using Tools with ChatClient
+```java
+EducationalTools tools = new EducationalTools();
+
+String response = chatClient.prompt("What is 123 * 456?")
+    .tools(tools)
+    .call()
+    .content();
+```
+
+### Tool Calling Flow
+1. Define tools with @Tool annotation
+2. Pass tools to ChatClient via .tools()
+3. AI model decides when to call tools
+4. Spring AI executes tools and returns results
+5. Model continues conversation with tool results
+
+### Key Concepts
+- **@Tool annotation**: Marks methods as callable tools
+- **@ToolParam annotation**: Describes tool parameters for the AI
+- **ToolCallingAdvisor**: Auto-registered advisor that handles tool loop
+- **Tool descriptions**: Help AI know when to use each tool
